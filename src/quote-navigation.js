@@ -13,8 +13,19 @@ export function randomQuoteIndex(length, current = -1, random = Math.random) {
 }
 
 export function parseQuoteLines(text) {
-  return text.split(/\r?\n/).filter(line => line.trim()).map((line, i) => {
-    const numbered = line.trim().match(/^(\d+)\s*[-.)–—:]\s*(.+)$/);
-    return { id: numbered ? Number(numbered[1]) : i + 1, text: numbered ? numbered[2] : line.trim(), author: 'Rivelino' };
-  });
+  const lines = text.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+  const numbered = lines.map(line => line.match(/^(\d+)\s*[-.)–—:]\s*(.+)$/)).filter(Boolean);
+  // Numbered collections may contain headings or replies between entries.
+  // Only assign sequential IDs when the entire file is unnumbered.
+  if (numbered.length) {
+    const seen = new Set();
+    return numbered.map(match => {
+      const id = Number(match[1]);
+      if (!Number.isSafeInteger(id) || id < 1) throw new Error('Quote numbers must be positive integers.');
+      if (seen.has(id)) throw new Error(`Duplicate quote number: ${id}.`);
+      seen.add(id);
+      return { id, text: match[2], author: 'Rivelino' };
+    });
+  }
+  return lines.map((text, i) => ({ id: i + 1, text, author: 'Rivelino' }));
 }
