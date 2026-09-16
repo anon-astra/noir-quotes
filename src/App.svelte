@@ -21,7 +21,14 @@
     try {
       let stored; try { stored = localStorage.getItem('noir-quotes'); } catch {}
       if (stored) { try { quotes = normalize(JSON.parse(stored)); } catch {} }
-      if (!quotes.length) { const r = await fetch(`${import.meta.env.BASE_URL}quotes.json`); if (!r.ok) throw new Error(); quotes = normalize(await r.json()); }
+      if (!quotes.length) {
+  const r = await fetch(`${import.meta.env.BASE_URL}wisdom.txt`);
+
+  if (!r.ok) throw new Error('Could not load default collection.');
+
+  const text = await r.text();
+  quotes = normalize(parseQuoteLines(text));
+}
     } catch { status = 'Could not load the collection. Import a quote file to begin.'; }
     loading = false;
   });
